@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/schemas/claude-code/mcp.json",
+  "_comment": "Default MCP servers for product builds. Playwright = browser verification (Generator/Evaluator both use it). GitHub = typed access to issues/PRs/checks (replaces dozens of `gh` shell-outs). Add product-specific MCPs under mcp/servers/ and reference them here.",
+  "mcpServers": {
+    "playwright": {
+      "_comment": "Browser automation for UI verification. Used by the verify skill, the Evaluator role, and any /eval task that grades UI behavior.",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "github": {
+      "_comment": "Typed GitHub access. Prefer over `gh` shell-outs for high-frequency calls (issue list, PR review). Auth via GITHUB_PERSONAL_ACCESS_TOKEN env var.",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    }
+  }
+}

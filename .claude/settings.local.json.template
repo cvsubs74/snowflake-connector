@@ -1,0 +1,23 @@
+{
+  "_comment": "Copy this file to .claude/settings.local.json (already gitignored). Tune the permission allowlist to what you trust agents to do without prompting in YOUR environment. Project-shared settings live in .claude/settings.json.",
+  "permissions": {
+    "allow": [
+      "Bash(gh:*)",
+      "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(python3:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(bun:*)",
+      "Bash(curl:*)",
+      "WebFetch",
+      "Read",
+      "Edit",
+      "Write"
+    ]
+  }
+}

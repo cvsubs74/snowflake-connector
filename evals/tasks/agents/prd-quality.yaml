@@ -1,0 +1,67 @@
+# Eval: does pm-agent produce PRDs that meet the rubric?
+#
+# This is the canonical example eval. It exercises the LLM-grader path and demonstrates
+# the resources / pass@k / pass^k / OOD-tag pattern.
+id: agents.prd-quality
+description: |
+  Given a thin product request, the pm-agent must produce a PRD under docs/prd/
+  that meets the four-dimension rubric: scope clarity, acceptance criteria,
+  open questions surfaced, slice-ability into PRs.
+
+# OOD flag — true means the task is novel and resists memorization.
+# This task is OOD because the prompt below is fresh each run (rotates from prompt-bank.yaml).
+OOD: true
+
+# Resource constraints (per Quantifying infrastructure noise post).
+resources:
+  guaranteed: 1x    # baseline CPU/RAM allocation
+  ceiling: 3x       # kill threshold (3x headroom = ~0% infra error)
+
+# Per-task token cap — defense against eval awareness (per BrowseComp post).
+# Kills runaway meta-reasoning before it can enumerate benchmark structure.
+token_cap:
+  input: 50000
+  output: 8000
+
+# Trials: how many independent runs to compute pass@k and pass^k.
+trials: 5
+
+# What we measure (all three: transcript, outcome, behavior).
+tracked_metrics:
+  - turns
+  - tool_calls
+  - input_tokens
+  - output_tokens
+  - ttfb_ms
+  - outcome.prd_file_created
+  - outcome.prd_file_path
+  - behavior.rubric_score
+
+# Graders. Multiple graders → combined via scoring_rule below.
+graders:
+  - id: prd_file_exists
+    type: code
+    module: graders.code_grader
+    function: file_exists_in_dir
+    args:
+      dir: docs/prd/
+      pattern: "PRD-*.md"
+  - id: prd_rubric
+    type: llm
+    module: graders.llm_grader
+    function: grade_with_rubric
+    args:
+      rubric: rubrics/prd-quality.md
+      model: claude-opus-4-7
+      passing_threshold: 7  # out of 10
+
+# How grader scores combine. Options: weighted_threshold | binary_and | partial_credit.
+# binary_and = both must pass; safest for "is this PRD shippable?".
+scoring_rule: binary_and
+
+# Embedded canary string (per BrowseComp post). If a transcript references this string,
+# the agent has somehow seen the eval definition itself — contamination signal.
+canary: "PRD-EVAL-CANARY-2026-05-25-d4f1a2"
+
+# Cohort tag — used by prod_monitor to segment quality (per Apr 23 postmortem).
+cohort: agent.pm

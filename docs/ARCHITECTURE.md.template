@@ -1,0 +1,59 @@
+# Architecture
+
+> Rename to `ARCHITECTURE.md` and fill in for your project.
+> Update + append a Change Log row whenever a change touches module shape, data flow, schema, or constraints.
+
+## System overview
+
+> One-paragraph description: language(s), runtime, primary data store, deploy target, major external dependencies.
+
+**Example:**
+
+> Two Python 3.11 Cloud Functions Gen2 (`api` and `worker`) in `us-east1`, a React 19 + Vite SPA on Firebase Hosting, Postgres for transactional data, GCS for blob storage, and Pub/Sub for async work. The validation engine is a 4-step distributed pipeline (`validate → transform → persist → notify`) fanned out via Pub/Sub.
+
+## Module map
+
+```
+.
+├── <service-a>/         # what this service does
+├── <service-b>/         # what this service does
+├── frontend/            # SPA
+├── shared/              # shared types / contracts
+└── infra/               # deploy + IaC
+```
+
+## Data flow
+
+```
+<ASCII diagram of how data moves through the system>
+```
+
+## Schemas
+
+> Link to or inline the canonical schema for each major data type. Note schema versioning if applicable.
+
+## Constraints / invariants
+
+- <Constraint 1 — e.g., "Tenant A and Tenant B data never crosses">
+- <Constraint 2 — e.g., "All writes go through the validation pipeline">
+- <Constraint 3>
+
+Constraints are load-bearing. PR review checks for changes that would violate them.
+
+## External dependencies
+
+| Service | Purpose | Failure mode if down |
+|---|---|---|
+| <name> | <what we use it for> | <what happens / graceful degradation strategy> |
+
+## Cross-flow contracts
+
+> If your project has shared schemas / APIs / IPC protocols where a change must update multiple consumers, document the contract here. Code Reviewer Agent uses this to enforce both-sides-updated discipline.
+
+## Change Log
+
+> Append a row whenever a change touches module shape, data flow, schema, or constraints. Most recent at the top.
+
+| Date | PR | What changed | Why |
+|---|---|---|---|
+| YYYY-MM-DD | #N | <one line> | <one line> |

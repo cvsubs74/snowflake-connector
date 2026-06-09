@@ -1,0 +1,52 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Git worktrees (Claude Code agents create these for isolation)
+.worktrees/
+.claude/worktrees/
+
+# Per-developer Claude settings — keep settings.local.json.template tracked, ignore the real file
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.log
+
+# Node / Frontend
+node_modules/
+dist/
+build/
+.next/
+coverage/
+.npm/
+
+# Secrets & credentials — never commit these
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+service-account*.json
+credentials.json
+client_secret*.json
+secrets/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Other AI tools (often co-exist with Claude Code)
+.gemini/
+.codex/
+
+# Superpowers brainstorming session artifacts (visual companion mockups)
+.superpowers/

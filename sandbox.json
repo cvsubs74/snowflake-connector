@@ -1,0 +1,56 @@
+{
+  "$schema": "https://anthropic.com/schemas/claude-code/sandbox.json",
+  "_comment": "OS-level isolation policy for Claude Code's /sandbox feature (bubblewrap on Linux, seatbelt on macOS). From the sandboxing post: 84% fewer permission prompts when paired with auto-mode. Enable per-session with /sandbox; subprocesses inherit.",
+  "filesystem": {
+    "_comment": "cwd is read/write by default. Add additional allowlists below.",
+    "allow_read": [
+      "${HOME}/.claude/skills",
+      "${HOME}/.npm/_cacache",
+      "${HOME}/.cache/pip",
+      "${HOME}/.cargo/registry"
+    ],
+    "allow_write": [
+      "${TMPDIR}/claude-*",
+      ".worktrees/**"
+    ],
+    "deny": [
+      "${HOME}/.aws/**",
+      "${HOME}/.ssh/**",
+      "${HOME}/.config/gh/**",
+      "${HOME}/.netrc",
+      "**/.env",
+      "**/.env.*",
+      "**/secrets/**",
+      "**/*.pem",
+      "**/*.key"
+    ]
+  },
+  "network": {
+    "_comment": "All outbound traffic goes through a unix-domain-socket proxy. Domains not listed below are blocked. Mirror the trusted_domains list in auto-mode.yaml.",
+    "allow_domains": [
+      "github.com",
+      "api.github.com",
+      "objects.githubusercontent.com",
+      "raw.githubusercontent.com",
+      "registry.npmjs.org",
+      "pypi.org",
+      "files.pythonhosted.org",
+      "anthropic.com",
+      "api.anthropic.com",
+      "docs.anthropic.com",
+      "cdn.jsdelivr.net",
+      "playwright.azureedge.net"
+    ],
+    "deny_all_other": true
+  },
+  "git_credentials": {
+    "_comment": "Scoped helper validates branch name + repo destination. SSH keys + signing keys are NEVER copied into the sandbox.",
+    "helper": "bin/gh-scoped-cred.sh",
+    "allow_branches": "^(feat|fix|chore|docs)/[a-z0-9-]+$",
+    "allow_remotes": ["origin"]
+  },
+  "escalation": {
+    "_comment": "When the agent hits an out-of-sandbox need, it asks the operator. No silent failures.",
+    "on_denial": "ask_operator"
+  }
+}

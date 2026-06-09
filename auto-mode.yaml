@@ -1,0 +1,98 @@
+# auto-mode.yaml — semantic classifier policy for Claude Code's auto mode.
+#
+# From the Claude Code auto-mode post:
+#   - Stage 1 (single-token yes/no): tuned to err toward blocking
+#   - Stage 2 (chain-of-thought): only fires when Stage 1 flags
+#   - Classifier sees only user messages + raw tool-call payload
+#     (assistant text + tool results stripped → no rationalization)
+#
+# Project-level overrides for the classifier's `environment`, `block_rules`,
+# and `allow_exceptions` slots. Inspect platform defaults with:
+#   claude auto-mode defaults
+#
+# This file is READ by the harness; the operator enables auto mode via /auto-mode
+# or the equivalent settings.json toggle. Just having this file does not turn
+# the feature on.
+
+# -----------------------------------------------------------------------------
+# environment — trusted surfaces the classifier should know about.
+# Helps Stage 1 quickly approve common calls without escalating to Stage 2.
+# -----------------------------------------------------------------------------
+environment:
+  trusted_domains:
+    - github.com
+    - api.github.com
+    - registry.npmjs.org
+    - pypi.org
+    - files.pythonhosted.org
+    - anthropic.com
+    - docs.anthropic.com
+    - cdn.jsdelivr.net   # for playwright browser downloads
+  trusted_services:
+    - playwright           # MCP — browser automation
+    - github               # MCP — typed GH access
+  working_branch_pattern: "^(feat|fix|chore|docs)/[a-z0-9-]+$"
+
+# -----------------------------------------------------------------------------
+# block_rules — semantic categories the classifier should always block.
+# Adds to the platform's 20+ defaults; never use to REMOVE a default.
+# -----------------------------------------------------------------------------
+block_rules:
+  - id: destroy_or_exfiltrate_secrets
+    description: |
+      Any operation that reads, writes, transmits, or exposes .env*, secrets/,
+      .ssh/, *.pem, *.key, ~/.aws/, ~/.config/gh/. Includes echo'ing them to logs.
+  - id: bypass_review
+    description: |
+      Any git operation using --no-verify, --no-gpg-sign, or any direct push to
+      main/master that isn't a fast-forward from an open PR's HEAD.
+  - id: degrade_security_layer
+    description: |
+      Edits that disable or weaken sandboxing, hooks, auto-mode rules, or CI
+      gates. Removing a `# WORKAROUND`/`# HACK` comment without a root-cause
+      note also blocks (workaround-audit hook catches these).
+  - id: cross_trust_boundary
+    description: |
+      Any FS write outside the project's working tree (~ or absolute paths
+      outside CWD), any network call to a domain not in environment.trusted_domains.
+  - id: prod_deploy_without_soak
+    description: |
+      Any deploy/release command without a corresponding soak period or cohort
+      rollout reminder. Per Apr 23 postmortem.
+
+# -----------------------------------------------------------------------------
+# allow_exceptions — narrow, scoped allowances. Each is one specific case where
+# the classifier should approve despite proximity to a block_rule.
+# -----------------------------------------------------------------------------
+allow_exceptions:
+  - id: package_install_in_declared_manifest
+    description: |
+      `npm install <pkg>`, `pip install <pkg>`, `cargo add <pkg>` when the
+      package is already listed in package.json / requirements.txt / Cargo.toml.
+      Adding a new package requires operator approval.
+  - id: working_branch_push
+    description: |
+      `git push origin <branch>` where <branch> matches environment.working_branch_pattern.
+      Never main/master.
+  - id: gh_credential_in_scoped_helper
+    description: |
+      The scoped git credential helper (bin/gh-scoped-cred.sh, if present) may
+      read GH_TOKEN from the OS keychain. Direct PAT echoing is still blocked.
+
+# -----------------------------------------------------------------------------
+# escalation — operator paging thresholds.
+# -----------------------------------------------------------------------------
+escalation:
+  consecutive_denials: 3      # 3 in a row → page operator
+  total_denials_per_session: 20
+
+# -----------------------------------------------------------------------------
+# Calibration metrics — the platform publishes its own; this is for reviewing
+# whether project-local rules drift from the platform's 0.4% FP / 17% FN baseline.
+# Populate after each /retro by running:
+#   python evals/prod_monitor/cohort_segment.py evals/results/ --cohort safety
+# -----------------------------------------------------------------------------
+calibration:
+  last_reviewed: "2026-05-25"
+  observed_false_positive_rate: null   # measured per /retro
+  observed_false_negative_rate: null
