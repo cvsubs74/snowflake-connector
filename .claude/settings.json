@@ -9,13 +9,7 @@
       "Edit(docs/**)",
       "Write(docs/**)",
       "Edit(memory/**)",
-      "Write(memory/**)",
-      "Edit(evals/**)",
-      "Write(evals/**)",
-      "Edit(mcp/**)",
-      "Write(mcp/**)",
-      "Edit(tools/**)",
-      "Write(tools/**)"
+      "Write(memory/**)"
     ]
   },
   "hooks": {
